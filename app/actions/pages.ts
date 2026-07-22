@@ -29,6 +29,28 @@ export async function uploadPageImage(file: File) {
   return urlData.publicUrl
 }
 
+export async function uploadPageFile(file: File) {
+  await requireAuth()
+
+  const fileExt = file.name.split('.').pop()
+  const filePath = `pages/files/${crypto.randomUUID()}.${fileExt}`
+
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const { error: uploadError } = await supabase.storage
+    .from('materials')
+    .upload(filePath, buffer, { contentType: file.type })
+
+  if (uploadError) {
+    throw new Error(`Upload failed: ${uploadError.message}`)
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('materials')
+    .getPublicUrl(filePath)
+
+  return { url: urlData.publicUrl, name: file.name, type: file.type }
+}
+
 export async function getPages() {
   await requireAdmin()
   return db
@@ -38,6 +60,9 @@ export async function getPages() {
       title: pages.title,
       content: pages.content,
       imageUrl: pages.imageUrl,
+      fileUrl: pages.fileUrl,
+      fileName: pages.fileName,
+      fileType: pages.fileType,
       isPublished: pages.isPublished,
       createdBy: pages.createdBy,
       createdAt: pages.createdAt,
@@ -69,6 +94,9 @@ export async function createPage(data: {
   title: string
   content: string
   imageUrl?: string
+  fileUrl?: string
+  fileName?: string
+  fileType?: string
 }) {
   const currentUser = await requireAdmin()
 
@@ -80,6 +108,9 @@ export async function createPage(data: {
       title: data.title,
       content: data.content,
       imageUrl: data.imageUrl || null,
+      fileUrl: data.fileUrl || null,
+      fileName: data.fileName || null,
+      fileType: data.fileType || null,
       isPublished: true,
       createdBy: currentUser.id,
       createdAt: new Date(),
@@ -98,6 +129,9 @@ export async function updatePage(
     title?: string
     content?: string
     imageUrl?: string
+    fileUrl?: string
+    fileName?: string
+    fileType?: string
     isPublished?: boolean
   }
 ) {
