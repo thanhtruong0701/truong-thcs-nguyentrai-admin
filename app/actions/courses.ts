@@ -104,6 +104,36 @@ export async function createLesson(
   }
 }
 
+export async function updateLesson(
+  id: string,
+  data: { title?: string; content?: string; orderIndex?: number }
+) {
+  await requireAdmin()
+
+  const result = await db
+    .update(lessons)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(lessons.id, id))
+    .returning()
+
+  if (result[0]) {
+    revalidatePath(`/admin/courses/${result[0].courseId}`)
+  }
+  return result[0]
+}
+
+export async function deleteLesson(id: string) {
+  await requireAdmin()
+
+  const lesson = await db.select().from(lessons).where(eq(lessons.id, id)).limit(1)
+  if (lesson[0]) {
+    // Delete materials first
+    await db.delete(materials).where(eq(materials.lessonId, id))
+    await db.delete(lessons).where(eq(lessons.id, id))
+    revalidatePath(`/admin/courses/${lesson[0].courseId}`)
+  }
+}
+
 export async function getTeacherCourses(teacherId: string) {
   return db
     .select()

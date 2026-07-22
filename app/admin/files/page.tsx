@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { getFileUploads, uploadFile, uploadMultipleFiles, deleteFileUpload } from '@/app/actions/files'
+import { getFileUploads, uploadFile, uploadMultipleFiles, deleteFileUpload, updateFileUpload } from '@/app/actions/files'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { FileDown, Upload, Trash2, FileText, FileSpreadsheet, FileArchive, File, Download, X, CheckCircle } from 'lucide-react'
+import { Modal } from '@/components/modal'
+import { FileDown, Upload, Trash2, Edit2, FileText, FileSpreadsheet, FileArchive, File, Download, X, CheckCircle, Eye, EyeOff } from 'lucide-react'
 
 interface FileUpload {
   id: string
@@ -76,6 +77,10 @@ export default function AdminFilesPage() {
   })
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([])
+  const [editingFile, setEditingFile] = useState<FileUpload | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editForm, setEditForm] = useState({ title: '', description: '', category: 'general' })
+  const [savingEdit, setSavingEdit] = useState(false)
 
   useEffect(() => {
     fetchFiles()
@@ -163,6 +168,39 @@ export default function AdminFilesPage() {
       alert('Lỗi khi xóa file')
     } finally {
       setDeleting(null)
+    }
+  }
+
+  function openEdit(file: FileUpload) {
+    setEditingFile(file)
+    setEditForm({
+      title: file.title,
+      description: file.description || '',
+      category: file.category || 'general',
+    })
+    setShowEditModal(true)
+  }
+
+  async function handleSaveEdit() {
+    if (!editingFile) return
+    setSavingEdit(true)
+    try {
+      await updateFileUpload(editingFile.id, editForm)
+      setFiles(files.map(f => f.id === editingFile.id ? { ...f, ...editForm } : f))
+      setShowEditModal(false)
+    } catch (error) {
+      alert('Lỗi khi cập nhật')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
+  async function handleTogglePublish(file: FileUpload) {
+    try {
+      await updateFileUpload(file.id, { isPublished: !file.isPublished })
+      setFiles(files.map(f => f.id === file.id ? { ...f, isPublished: !f.isPublished } : f))
+    } catch (error) {
+      alert('Lỗi khi cập nhật')
     }
   }
 
@@ -337,6 +375,20 @@ export default function AdminFilesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={() => handleTogglePublish(file)}
+                    className="p-2 rounded-lg hover:bg-gray-100 transition"
+                    title={file.isPublished ? 'Gỡ xuất bản' : 'Xuất bản'}
+                  >
+                    {file.isPublished ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-green-600" />}
+                  </button>
+                  <button
+                    onClick={() => openEdit(file)}
+                    className="p-2 rounded-lg hover:bg-gray-100 transition"
+                    title="Chỉnh sửa"
+                  >
+                    <Edit2 className="w-4 h-4 text-gray-500" />
+                  </button>
                   <a
                     href={file.fileUrl}
                     target="_blank"
@@ -360,6 +412,50 @@ export default function AdminFilesPage() {
           ))}
         </div>
       )}
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Chỉnh sửa file"
+      >
+        <div className="space-y-4">
+          <div>
+            <Label>Tiêu đề</Label>
+            <Input
+              value={editForm.title}
+              onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label>Mô tả</Label>
+            <Input
+              value={editForm.description}
+              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label>Danh mục</Label>
+            <select
+              value={editForm.category}
+              onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+              className="mt-1 w-full h-9 rounded-lg border border-input bg-transparent px-3 text-sm"
+            >
+              {CATEGORIES.map(cat => (
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setShowEditModal(false)}>Hủy</Button>
+            <Button onClick={handleSaveEdit} disabled={savingEdit} className="bg-blue-600 hover:bg-blue-700">
+              {savingEdit ? 'Đang lưu...' : 'Lưu'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

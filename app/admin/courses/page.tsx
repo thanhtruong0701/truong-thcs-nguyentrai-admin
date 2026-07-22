@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Modal } from '@/components/modal'
-import { Plus, Trash2, Edit2, BookOpen, Eye, EyeOff } from 'lucide-react'
+import { Plus, Trash2, Edit2, BookOpen, Eye, EyeOff, FileText } from 'lucide-react'
 
 interface Course {
   id: string
@@ -177,6 +177,13 @@ export default function AdminCoursesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
+                  <Link
+                    href={`/admin/courses/${course.id}`}
+                    className="p-2 rounded-lg hover:bg-blue-50 transition"
+                    title="Quản lý bài giảng"
+                  >
+                    <FileText className="w-4 h-4 text-blue-500" />
+                  </Link>
                   <button
                     onClick={() => handleTogglePublish(course.id, course.isPublished)}
                     className="p-2 rounded-lg hover:bg-gray-100 transition"

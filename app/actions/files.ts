@@ -2,7 +2,7 @@
 
 import { db } from '@/lib/db'
 import { fileUploads } from '@/lib/db/schema'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/auth-helpers'
 import { supabase } from '@/lib/supabase'
@@ -36,7 +36,7 @@ export async function getPublishedFilesByCategory(category: string) {
   return db
     .select()
     .from(fileUploads)
-    .where(eq(fileUploads.isPublished, true))
+    .where(sql`${fileUploads.isPublished} = true AND ${fileUploads.category} = ${category}`)
     .orderBy(desc(fileUploads.createdAt))
 }
 

@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { getAllUsers, createUser, deleteUser, updateUserRole } from '@/app/actions/admin'
+import { getAllUsers, createUser, deleteUser, updateUserRole, updateUser } from '@/app/actions/admin'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Modal } from '@/components/modal'
-import { Plus, Trash2, Users, Shield, GraduationCap, User } from 'lucide-react'
+import { Plus, Trash2, Edit2, Users, Shield, GraduationCap, User } from 'lucide-react'
 
 interface User {
   id: string
@@ -48,6 +48,10 @@ export default function AdminUsersPage() {
     password: '',
     role: 'student',
   })
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', email: '' })
+  const [savingEdit, setSavingEdit] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -107,6 +111,26 @@ export default function AdminUsersPage() {
       setUsers(users.map(u => u.id === id ? { ...u, role: newRole } : u))
     } catch (error) {
       alert('Lỗi khi cập nhật vai trò')
+    }
+  }
+
+  function openEdit(user: User) {
+    setEditingUser(user)
+    setEditForm({ name: user.name || '', email: user.email })
+    setShowEditModal(true)
+  }
+
+  async function handleSaveEdit() {
+    if (!editingUser) return
+    setSavingEdit(true)
+    try {
+      await updateUser(editingUser.id, editForm)
+      setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...editForm } : u))
+      setShowEditModal(false)
+    } catch (error) {
+      alert('Lỗi khi cập nhật')
+    } finally {
+      setSavingEdit(false)
     }
   }
 
@@ -203,7 +227,14 @@ export default function AdminUsersPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-end">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => openEdit(user)}
+                            className="p-2 rounded-lg hover:bg-gray-100 transition"
+                            title="Chỉnh sửa"
+                          >
+                            <Edit2 className="w-4 h-4 text-gray-500" />
+                          </button>
                           <button
                             onClick={() => handleDelete(user.id, user.name || user.email)}
                             disabled={deleting === user.id}
@@ -275,6 +306,39 @@ export default function AdminUsersPage() {
             <Button variant="outline" onClick={() => setShowModal(false)}>Hủy</Button>
             <Button onClick={handleCreate} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
               {saving ? 'Đang tạo...' : 'Tạo mới'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Chỉnh sửa người dùng"
+      >
+        <div className="space-y-4">
+          <div>
+            <Label>Họ và tên</Label>
+            <Input
+              value={editForm.name}
+              onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={editForm.email}
+              onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setShowEditModal(false)}>Hủy</Button>
+            <Button onClick={handleSaveEdit} disabled={savingEdit} className="bg-blue-600 hover:bg-blue-700">
+              {savingEdit ? 'Đang lưu...' : 'Lưu'}
             </Button>
           </div>
         </div>

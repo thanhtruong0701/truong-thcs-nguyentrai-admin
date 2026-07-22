@@ -65,34 +65,65 @@ export async function createAdminAccount() {
 
 export async function seedDefaultData() {
   try {
-    // Seed default menu items
-    const existingMenu = await db.select().from(menuItems).limit(1)
-    if (existingMenu.length === 0) {
-      await db.insert(menuItems).values([
-        { id: crypto.randomUUID(), label: 'Trang chủ', link: '/', orderIndex: 1, isVisible: true },
-        { id: crypto.randomUUID(), label: 'Khóa học', link: '/courses', orderIndex: 2, isVisible: true },
-        { id: crypto.randomUUID(), label: 'Thông báo', link: '/#announcements', orderIndex: 3, isVisible: true },
-        { id: crypto.randomUUID(), label: 'Liên hệ', link: '/contact', orderIndex: 4, isVisible: true },
-      ])
+    // Seed default menu items - add missing ones
+    const existingMenus = await db.select().from(menuItems)
+    const existingLinks = existingMenus.map(m => m.link)
+
+    const defaultMenus = [
+      { label: 'Trang chủ', link: '/', orderIndex: 1 },
+      { label: 'Bài viết', link: '/bai-viet', orderIndex: 2 },
+      { label: 'Bài giảng', link: '/bai-giang', orderIndex: 3 },
+      { label: 'Giáo án', link: '/giao-an', orderIndex: 4 },
+      { label: 'Đề thi', link: '/de-thi', orderIndex: 5 },
+      { label: 'Tư liệu', link: '/tu-lieu', orderIndex: 6 },
+      { label: 'Sáng kiến KN', link: '/sang-kien', orderIndex: 7 },
+      { label: 'Toán học vui', link: '/toan-hoc-vui', orderIndex: 8 },
+      { label: 'Tin giáo dục', link: '/tin-giao-duc', orderIndex: 9 },
+      { label: 'Khóa học', link: '/courses', orderIndex: 10 },
+      { label: 'Kiểm tra', link: '/quizzes', orderIndex: 11 },
+      { label: 'Liên hệ', link: '/contact', orderIndex: 12 },
+    ]
+
+    const menusToAdd = defaultMenus.filter(m => !existingLinks.includes(m.link))
+    if (menusToAdd.length > 0) {
+      await db.insert(menuItems).values(
+        menusToAdd.map(m => ({
+          id: crypto.randomUUID(),
+          label: m.label,
+          link: m.link,
+          orderIndex: m.orderIndex,
+          isVisible: true,
+        }))
+      )
     }
 
-    // Seed default settings
-    const existingSettings = await db.select().from(settings).limit(1)
-    if (existingSettings.length === 0) {
-      await db.insert(settings).values([
-        { id: crypto.randomUUID(), key: 'school_name', value: 'Trường THCS Nguyễn Trãi' },
-        { id: crypto.randomUUID(), key: 'school_address', value: 'Quận Gò Vấp, TP. HCM' },
-        { id: crypto.randomUUID(), key: 'school_phone', value: '(028) 3842-5904' },
-        { id: crypto.randomUUID(), key: 'school_email', value: 'info@truongnguyen.edu.vn' },
-        { id: crypto.randomUUID(), key: 'school_website', value: 'https://thcsnguyentraigovap.hcm.edu.vn' },
-        { id: crypto.randomUUID(), key: 'school_principal', value: 'ThS. Trần Văn A' },
-        { id: crypto.randomUUID(), key: 'school_description', value: 'Cổng thông tin điện tử Trường THCS Nguyễn Trãi' },
-        { id: crypto.randomUUID(), key: 'school_opening_hours', value: '07:00' },
-        { id: crypto.randomUUID(), key: 'school_closing_hours', value: '17:00' },
-      ])
+    // Seed default settings - add missing ones
+    const existingSettings = await db.select().from(settings)
+    const existingKeys = existingSettings.map(s => s.key)
+
+    const defaultSettings = [
+      { key: 'schoolName', value: 'Trường THCS Nguyễn Trãi' },
+      { key: 'schoolAddress', value: 'Quận Gò Vấp, TP. HCM' },
+      { key: 'schoolPhone', value: '(028) 3842-5904' },
+      { key: 'schoolEmail', value: 'info@truongnguyen.edu.vn' },
+      { key: 'schoolWebsite', value: 'https://thcsnguyentraigovap.hcm.edu.vn' },
+      { key: 'schoolManager', value: 'ThS. Trần Văn A' },
+      { key: 'workingHours', value: 'Thứ 2 - Thứ 6: 7:00 - 17:00' },
+      { key: 'primaryColor', value: '#1e3a5f' },
+    ]
+
+    const settingsToAdd = defaultSettings.filter(s => !existingKeys.includes(s.key))
+    if (settingsToAdd.length > 0) {
+      await db.insert(settings).values(
+        settingsToAdd.map(s => ({
+          id: crypto.randomUUID(),
+          key: s.key,
+          value: s.value,
+        }))
+      )
     }
 
-    return { success: true, message: 'Dữ liệu mặc định đã được tạo' }
+    return { success: true, message: `Đã thêm ${menusToAdd.length} menu items và ${settingsToAdd.length} settings` }
   } catch (error) {
     console.error('Seed error:', error)
     return { success: false, message: 'Lỗi khi tạo dữ liệu mặc định' }

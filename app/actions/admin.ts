@@ -59,6 +59,19 @@ export async function updateUserRole(userId: string, newRole: 'admin' | 'teacher
   return result[0]
 }
 
+export async function updateUser(userId: string, data: { name?: string; email?: string }) {
+  await requireAdmin()
+
+  const result = await db
+    .update(user)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(user.id, userId))
+    .returning()
+
+  revalidatePath('/admin/users')
+  return result[0]
+}
+
 export async function deleteUser(userId: string) {
   await requireAdmin()
 
