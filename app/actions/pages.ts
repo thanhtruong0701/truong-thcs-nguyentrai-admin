@@ -63,6 +63,7 @@ export async function getPages() {
       fileUrl: pages.fileUrl,
       fileName: pages.fileName,
       fileType: pages.fileType,
+      files: pages.files,
       isPublished: pages.isPublished,
       createdBy: pages.createdBy,
       createdAt: pages.createdAt,
@@ -97,6 +98,7 @@ export async function createPage(data: {
   fileUrl?: string
   fileName?: string
   fileType?: string
+  files?: string
 }) {
   const currentUser = await requireAdmin()
 
@@ -111,6 +113,7 @@ export async function createPage(data: {
       fileUrl: data.fileUrl || null,
       fileName: data.fileName || null,
       fileType: data.fileType || null,
+      files: data.files || null,
       isPublished: true,
       createdBy: currentUser.id,
       createdAt: new Date(),
@@ -132,6 +135,7 @@ export async function updatePage(
     fileUrl?: string
     fileName?: string
     fileType?: string
+    files?: string
     isPublished?: boolean
   }
 ) {

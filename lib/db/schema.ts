@@ -196,6 +196,7 @@ export const pages = pgTable('pages', {
   fileUrl: text('file_url'),
   fileName: text('file_name'),
   fileType: text('file_type'),
+  files: text('files'), // JSON array: [{url, name, type}]
   isPublished: boolean('is_published').notNull().default(true),
   createdBy: text('created_by').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
