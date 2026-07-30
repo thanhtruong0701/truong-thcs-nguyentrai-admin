@@ -78,6 +78,8 @@ export async function createAnnouncement(data: {
   fileUrl?: string
   fileName?: string
   fileType?: string
+  images?: string
+  files?: string
 }) {
   const currentUser = await requireAuth()
 
@@ -95,6 +97,8 @@ export async function createAnnouncement(data: {
       fileUrl: data.fileUrl || null,
       fileName: data.fileName || null,
       fileType: data.fileType || null,
+      images: data.images || null,
+      files: data.files || null,
       createdBy: currentUser.id,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -114,6 +118,8 @@ export async function updateAnnouncement(
     fileUrl?: string
     fileName?: string
     fileType?: string
+    images?: string
+    files?: string
     isPinned?: boolean
   }
 ) {

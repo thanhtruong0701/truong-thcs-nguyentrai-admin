@@ -64,6 +64,8 @@ export const announcements = pgTable('announcements', {
   fileUrl: text('file_url'),
   fileName: text('file_name'),
   fileType: text('file_type'),
+  images: text('images'), // JSON array: [url1, url2, ...]
+  files: text('files'),   // JSON array: [{url, name, type}]
   isPinned: boolean('is_pinned').notNull().default(false),
   pinOrder: integer('pin_order').default(0),
   createdBy: text('created_by').notNull(),
