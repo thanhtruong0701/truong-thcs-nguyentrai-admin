@@ -119,6 +119,9 @@ export const menuItems = pgTable('menu_items', {
   id: text('id').primaryKey(),
   label: text('label').notNull(),
   link: text('link').notNull(),
+  icon: text('icon').default('📄'),                // emoji icon
+  menuType: text('menu_type').default('page'),    // 'page' | 'category' (danh mục cha, không có link)
+  parentId: text('parent_id'),                    // null = root menu, có giá trị = sub-menu
   orderIndex: integer('order_index').notNull().default(0),
   isVisible: boolean('is_visible').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -146,6 +149,7 @@ export const fileUploads = pgTable('file_uploads', {
   uploadedBy: text('uploaded_by').notNull(),
   downloadCount: integer('download_count').notNull().default(0),
   isPublished: boolean('is_published').notNull().default(true),
+  allowDownload: boolean('allow_download').notNull().default(true), // admin tick = cho tải
   createdAt: timestamp('created_at').notNull().defaultNow(),
 })
 

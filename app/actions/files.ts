@@ -53,7 +53,8 @@ export async function uploadFile(
   file: File,
   title: string,
   description: string,
-  category: string
+  category: string,
+  allowDownload: boolean = true
 ) {
   const currentUser = await requireAdmin()
 
@@ -96,6 +97,7 @@ export async function uploadFile(
       fileSize: file.size,
       category: category || 'general',
       uploadedBy: currentUser.id,
+      allowDownload,
       createdAt: new Date(),
     })
     .returning()
@@ -111,6 +113,7 @@ export async function updateFileUpload(
     description?: string
     category?: string
     isPublished?: boolean
+    allowDownload?: boolean
   }
 ) {
   await requireAdmin()
@@ -151,7 +154,8 @@ export async function incrementDownloadCount(id: string) {
 
 export async function uploadMultipleFiles(
   files: File[],
-  category: string
+  category: string,
+  allowDownload: boolean = true
 ) {
   const currentUser = await requireAdmin()
   const results = []
@@ -198,6 +202,7 @@ export async function uploadMultipleFiles(
         fileSize: file.size,
         category: category || 'general',
         uploadedBy: currentUser.id,
+        allowDownload,
         createdAt: new Date(),
       })
       .returning()

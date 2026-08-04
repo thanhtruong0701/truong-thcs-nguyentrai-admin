@@ -18,6 +18,7 @@ import {
   FileDown,
   ClipboardCheck,
   FileText,
+  FolderTree,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -25,6 +26,7 @@ const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/announcements', label: 'Thông báo', icon: Bell },
   { href: '/admin/courses', label: 'Khóa học', icon: BookOpen },
+  { href: '/admin/menus', label: 'Quản lý Menu', icon: FolderTree },
   { href: '/admin/pages', label: 'Bài viết theo danh mục', icon: FileText },
   { href: '/admin/files', label: 'Tài liệu', icon: FileDown },
   { href: '/admin/quizzes', label: 'Kiểm tra', icon: ClipboardCheck },

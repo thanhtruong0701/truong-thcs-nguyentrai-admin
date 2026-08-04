@@ -19,6 +19,7 @@ interface FileUpload {
   category?: string | null
   downloadCount: number
   isPublished: boolean
+  allowDownload: boolean
   createdAt: Date
 }
 
@@ -74,12 +75,13 @@ export default function AdminFilesPage() {
     title: '',
     description: '',
     category: 'general',
+    allowDownload: true,
   })
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([])
   const [editingFile, setEditingFile] = useState<FileUpload | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [editForm, setEditForm] = useState({ title: '', description: '', category: 'general' })
+  const [editForm, setEditForm] = useState({ title: '', description: '', category: 'general', allowDownload: true })
   const [savingEdit, setSavingEdit] = useState(false)
 
   useEffect(() => {
@@ -128,18 +130,18 @@ export default function AdminFilesPage() {
         const title = form.title.trim() || file.name.replace(/\.[^/.]+$/, '')
         setUploadProgress(prev => prev.map((p, i) => i === 0 ? { ...p, status: 'uploading' } : p))
         
-        await uploadFile(file, title, form.description, form.category)
+        await uploadFile(file, title, form.description, form.category, form.allowDownload)
         
         setUploadProgress(prev => prev.map((p, i) => i === 0 ? { ...p, status: 'done' } : p))
       } else {
         // Upload multiple files - each file uses its own name as title
-        await uploadMultipleFiles(selectedFiles, form.category)
+        await uploadMultipleFiles(selectedFiles, form.category, form.allowDownload)
         setUploadProgress(prev => prev.map(p => ({ ...p, status: 'done' })))
       }
 
       // Reset form after success
       setTimeout(() => {
-        setForm({ title: '', description: '', category: 'general' })
+        setForm({ title: '', description: '', category: 'general', allowDownload: true })
         setSelectedFiles([])
         setUploadProgress([])
         setShowForm(false)
@@ -177,6 +179,7 @@ export default function AdminFilesPage() {
       title: file.title,
       description: file.description || '',
       category: file.category || 'general',
+      allowDownload: file.allowDownload,
     })
     setShowEditModal(true)
   }
@@ -257,6 +260,23 @@ export default function AdminFilesPage() {
               placeholder="Mô tả ngắn về file..."
               className="mt-1"
             />
+          </div>
+
+          {/* Toggle cho phép tải */}
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition">
+              <input
+                type="checkbox"
+                checked={form.allowDownload}
+                onChange={(e) => setForm({ ...form, allowDownload: e.target.checked })}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+              />
+              <div>
+                <p className="text-sm font-medium text-gray-900">Cho phép tải xuống</p>
+                <p className="text-xs text-gray-500">Nếu bỏ tick, người dùng xem được file nhưng không tải được</p>
+              </div>
+              <span className="ml-auto text-lg">{form.allowDownload ? '✅' : '🔒'}</span>
+            </label>
           </div>
           
           <div>
@@ -382,6 +402,23 @@ export default function AdminFilesPage() {
                   >
                     {file.isPublished ? <EyeOff className="w-4 h-4 text-gray-500" /> : <Eye className="w-4 h-4 text-green-600" />}
                   </button>
+                  {/* Toggle allowDownload inline */}
+                  <button
+                    onClick={async () => {
+                      try {
+                        await updateFileUpload(file.id, { allowDownload: !file.allowDownload })
+                        setFiles(files.map(f => f.id === file.id ? { ...f, allowDownload: !f.allowDownload } : f))
+                      } catch { alert('Lỗi khi cập nhật') }
+                    }}
+                    className={`p-2 rounded-lg transition text-xs font-bold ${
+                      file.allowDownload
+                        ? 'hover:bg-orange-50 text-green-600'
+                        : 'hover:bg-gray-100 text-gray-400'
+                    }`}
+                    title={file.allowDownload ? 'Đang cho tải - nhấn để chặn' : 'Đang chặn tải - nhấn để cho phép'}
+                  >
+                    {file.allowDownload ? '✅' : '🔒'}
+                  </button>
                   <button
                     onClick={() => openEdit(file)}
                     className="p-2 rounded-lg hover:bg-gray-100 transition"
@@ -447,6 +484,21 @@ export default function AdminFilesPage() {
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition">
+              <input
+                type="checkbox"
+                checked={editForm.allowDownload}
+                onChange={(e) => setEditForm({ ...editForm, allowDownload: e.target.checked })}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+              />
+              <div>
+                <p className="text-sm font-medium text-gray-900">Cho phép tải xuống</p>
+                <p className="text-xs text-gray-500">Bỏ tick để chặn người dùng tải file này</p>
+              </div>
+              <span className="ml-auto text-lg">{editForm.allowDownload ? '✅' : '🔒'}</span>
+            </label>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button variant="outline" onClick={() => setShowEditModal(false)}>Hủy</Button>

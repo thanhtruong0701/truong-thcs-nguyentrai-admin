@@ -14,6 +14,7 @@ interface Attachment {
   name: string
   type: string
   isImage: boolean
+  allowDownload: boolean  // cho phép tải xuống
 }
 
 interface Page {
@@ -152,7 +153,8 @@ export default function AdminPagesPage() {
       const result = await uploadPageFile(file)
       setForm(prev => ({
         ...prev,
-        attachments: [...prev.attachments, { url: result.url, name: result.name, type: result.type, isImage: false }]
+        // mặc định allowDownload = true khi upload mới
+        attachments: [...prev.attachments, { url: result.url, name: result.name, type: result.type, isImage: false, allowDownload: true }]
       }))
     } catch { alert('Lỗi khi tải file') }
     finally { setUploadingFile(false); if (fileInputRef.current) fileInputRef.current.value = '' }
@@ -287,13 +289,39 @@ export default function AdminPagesPage() {
             {form.attachments.length > 0 && (
               <div className="mt-3 space-y-2">
                 {form.attachments.map((att, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                    {att.isImage ? <ImageIcon className="w-4 h-4 text-purple-500" /> : getFileIcon(att.type)}
-                    <span className="text-sm text-gray-700 flex-1 truncate">{att.name}</span>
-                    <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Xem</a>
-                    <button type="button" onClick={() => removeAttachment(i)} className="p-1 rounded hover:bg-red-100">
-                      <X className="w-4 h-4 text-red-500" />
-                    </button>
+                  <div key={i} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center gap-3">
+                      {att.isImage ? <ImageIcon className="w-4 h-4 text-purple-500" /> : getFileIcon(att.type)}
+                      <span className="text-sm text-gray-700 flex-1 truncate">{att.name}</span>
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">Xem</a>
+                      <button type="button" onClick={() => removeAttachment(i)} className="p-1 rounded hover:bg-red-100">
+                        <X className="w-4 h-4 text-red-500" />
+                      </button>
+                    </div>
+                    {/* Toggle cho phép tải */}
+                    <div className="mt-2 flex items-center gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={att.allowDownload}
+                          onChange={(e) => {
+                            setForm(prev => ({
+                              ...prev,
+                              attachments: prev.attachments.map((a, idx) =>
+                                idx === i ? { ...a, allowDownload: e.target.checked } : a
+                              )
+                            }))
+                          }}
+                          className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer"
+                        />
+                        <span className="text-xs text-gray-600">
+                          {att.allowDownload
+                            ? <span className="text-green-600 font-medium">✅ Cho phép tải xuống</span>
+                            : <span className="text-gray-400">🔒 Không cho tải</span>
+                          }
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -86,6 +86,9 @@ export async function getMenuItems() {
 export async function createMenuItem(data: {
   label: string
   link: string
+  icon?: string
+  menuType?: string
+  parentId?: string | null
   orderIndex?: number
 }) {
   await requireAdmin()
@@ -96,6 +99,9 @@ export async function createMenuItem(data: {
       id: crypto.randomUUID(),
       label: data.label,
       link: data.link,
+      icon: data.icon || '📄',
+      menuType: data.menuType || 'page',
+      parentId: data.parentId || null,
       orderIndex: data.orderIndex || 0,
     })
     .returning()
@@ -109,6 +115,9 @@ export async function updateMenuItem(
   data: {
     label?: string
     link?: string
+    icon?: string
+    menuType?: string
+    parentId?: string | null
     orderIndex?: number
     isVisible?: boolean
   }
